@@ -10,10 +10,12 @@ require_once "core.php";
 sleep(1);
 
 if (
-	isset($_POST['email']) && !empty($_POST['email']) && isset($_POST['password']) && !empty($_POST['password'])
+	isset($_POST['email']) && !empty($_POST['email'])
+	&& isset($_POST['password']) && !empty($_POST['password'])
+	&& isset($_POST['role']) && !empty($_POST['role'])
 ) {
 	$obj = new visa();
-	$obj->login($_POST['email'], $_POST['password']);
+	$obj->login($_POST['email'], $_POST['password'], $_POST['role'],);
 } else {
 	echo json_encode(array('message' => 'All fields are required', 'data' => [], 'error' => '', 'code' => 400));
 }

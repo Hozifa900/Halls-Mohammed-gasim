@@ -12,9 +12,10 @@ if (
 	&& isset($_POST['phone']) && !empty($_POST['phone'])
 	&& isset($_POST['email']) && !empty($_POST['email'])
 	&& isset($_POST['password']) && !empty($_POST['password'])
+	&& isset($_POST['role']) && !empty($_POST['role'])
 ) {
 	$obj = new visa();
-	$obj->signup($_POST['name'], $_POST['phone'], $_POST['email'], $_POST['password']);
+	$obj->signup($_POST['name'], $_POST['phone'], $_POST['email'], $_POST['password'], $_POST['role']);
 } else {
 	echo json_encode(array('message' => 'All fields are required', 'data' => [], 'error' => '', 'code' => 400));
 }
