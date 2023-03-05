@@ -157,7 +157,83 @@ class visa
 	/* <-------- Add hall End --------------------------------------------------------------------> */
 
 
-	/* <---------- This function to get booking -----------------------------------------------------------> */
+	// USER API
+	/* <--------- This function to add booking ----------------------------------------------------------> */
+	public function add_booking($date, $hours, $payment_id, $hall_id, $token)
+	{
+		$date = mysqli_real_escape_string($this->connect, $date);
+		$hours = mysqli_real_escape_string($this->connect, $hours);
+		$payment_id = mysqli_real_escape_string($this->connect, $payment_id);
+		$sql = " SELECT * FROM `user_token` WHERE `user_token`.`token` = '$token' ";
+		$query = mysqli_query($this->connect, $sql);
+		$num = mysqli_num_rows($query);
+		$row = mysqli_fetch_array($query);
+		$user_id = $row['user_id'];
+		if ($num > 0) {
+			// then submit the order details .............. ..... .. .. . . .. .... .. .. 
+			$sql = " INSERT INTO `booking`(`date`, `hours`, `payment_id`,`user_id`, `hall_id`  ) 
+							VALUES ('$date', '$hours', '$payment_id', '$user_id', '$hall_id') ";
+			$query = mysqli_query($this->connect, $sql);
+
+			if ($query) {
+				echo json_encode(array('message' => 'Booking added successfully', 'data' => [], 'error' => '', 'code' => 200));
+				die();
+			}
+		} else {
+			echo json_encode(array('message' => "Bad token.", 'data' => [], 'error' => '', 'code' => 400));
+			die();
+		}
+		if (mysqli_error($this->connect)) {
+			echo json_encode(array('message' => 'server error', 'data' => [], 'error' => mysqli_error($this->connect), 'code' => 500));
+			die();
+		}
+	}
+	/* <-------- Add hall End --------------------------------------------------------------------> */
+
+
+	// USER API 
+	/* <---------- This function to get all halls for the user -----------------------------------------------------------> */
+	public function get_halls($token)
+	{
+		$token = mysqli_real_escape_string($this->connect, $token);
+		$sql = " SELECT * FROM `user_token` WHERE `user_token`.`token` = '$token'";
+		$query = mysqli_query($this->connect, $sql);
+		$num = mysqli_num_rows($query);
+		$row = mysqli_fetch_array($query);
+
+		if ($num == 1) {
+			$user_id = $row['user_id'];
+			$r = [];
+			$sql = "SELECT * FROM `halls` ORDER BY `halls`.`hall_id` DESC";
+			$query = mysqli_query($this->connect, $sql);
+			$num = mysqli_num_rows($query);
+			$i = 0;
+			while ($row = mysqli_fetch_array($query)) {
+				$r[$i] = array(
+					'hall_id' => $row['hall_id'],
+					'hall_name' => $row['hall_name'], 'owner' => $row['owner'],
+					'email' => $row['email'], 'phone' => $row['phone'],  'price' => $row['price'],
+					'services' => 'services', 'location' => 'location', 'capacity' => $row['capacity'],
+					'bank_account_id' => $row['bank_account_id'], 'bank_account_name' => $row['bank_account_name'], 'images' => $row['images'],
+
+				);
+				$i++;
+			}
+			echo json_encode(array('message' => 'get successfully.', 'data' => $r, 'error' => '', 'record num' => $num, 'code' => 200));
+			die();
+		} else {
+			echo json_encode(array('message' => 'Bad token', 'data' => [$token], 'error' => 'This token is old or invalid', 'code' => 400));
+			die();
+		}
+		if (mysqli_error($this->connect)) {
+			echo json_encode(array('message' => mysqli_error($this->connect), 'data' => [], 'error' => 'SQL error', 'code' => 500));
+			die();
+		}
+	}
+	/* <------------ Get booking End ---------------------------------------------------------> */
+
+
+	/* <---------- This function to get all booking for admin -----------------------------------------------------------> */
 	public function get_booking($token)
 	{
 		$token = mysqli_real_escape_string($this->connect, $token);
@@ -168,7 +244,7 @@ class visa
 
 		if ($num == 1) {
 			$r = [];
-			$sql = "SELECT * FROM `booking`, `halls`, `users` WHERE `users`.`user_id` = `booking`.`user_id` AND `halls`.`hall_id` = `booking`.`hall_id`  ORDER BY `order`.`id` DESC";
+			$sql = "SELECT * FROM `booking`, `halls`, `users` WHERE `users`.`user_id` = `booking`.`user_id` AND `halls`.`hall_id` = `booking`.`hall_id`  ORDER BY `halls`.`hall_id` DESC";
 			$query = mysqli_query($this->connect, $sql);
 			$i = 0;
 			while ($row = mysqli_fetch_array($query)) {
@@ -193,6 +269,48 @@ class visa
 			echo json_encode(array('message' => mysqli_error($this->connect), 'data' => [], 'error' => 'SQL error', 'code' => 500));
 			die();
 		}
-		/* <------------ Get booking End ---------------------------------------------------------> */
 	}
+	/* <------------ Get booking End ---------------------------------------------------------> */
+
+
+	// USER API 
+	/* <---------- This function to get specific booking for the user -----------------------------------------------------------> */
+	public function get_my_booking($token)
+	{
+		$token = mysqli_real_escape_string($this->connect, $token);
+		$sql = " SELECT * FROM `user_token` WHERE `user_token`.`token` = '$token'";
+		$query = mysqli_query($this->connect, $sql);
+		$num = mysqli_num_rows($query);
+		$row = mysqli_fetch_array($query);
+
+		if ($num == 1) {
+			$user_id = $row['user_id'];
+			$r = [];
+			$sql = "SELECT * FROM `booking`, `halls`, `users` WHERE `users`.`user_id` = `booking`.`user_id` AND `halls`.`hall_id` = `booking`.`hall_id` AND `users`.`user_id` = '$user_id'  ORDER BY `halls`.`hall_id` DESC";
+			$query = mysqli_query($this->connect, $sql);
+			$i = 0;
+			while ($row = mysqli_fetch_array($query)) {
+				$r[$i] = array(
+					'hall_name' => $row['hall_name'], 'owner' => $row['owner'],
+					'email' => $row['email'], 'phone' => $row['phone'],  'price' => $row['price'],
+					'services' => 'services', 'location' => 'location', 'capacity' => $row['capacity'],
+					'bank_account_id' => $row['bank_account_id'], 'bank_account_name' => $row['bank_account_name'], 'images' => $row['images'],
+					'date' => $row['date'], 'hours' => $row['hours'], 'payment_id' => $row['payment_id'],
+					'user_name' => $row['user_name']
+
+				);
+				$i++;
+			}
+			echo json_encode(array('message' => 'get successfully.', 'data' => $r, 'error' => '', 'code' => 200));
+			die();
+		} else {
+			echo json_encode(array('message' => 'Bad token', 'data' => [$token], 'error' => 'This token is old or invalid', 'code' => 400));
+			die();
+		}
+		if (mysqli_error($this->connect)) {
+			echo json_encode(array('message' => mysqli_error($this->connect), 'data' => [], 'error' => 'SQL error', 'code' => 500));
+			die();
+		}
+	}
+	/* <------------ Get booking End ---------------------------------------------------------> */
 }
